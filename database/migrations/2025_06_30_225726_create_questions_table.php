@@ -11,14 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('users', function (Blueprint $table) {
+        Schema::create('questions', function (Blueprint $table) {
             $table->id();
-            $table->string('email')->unique();
-            $table->string('password');
-
-            $table->string('otp_code')->nullable();
-            $table->timestamp('otp_expires_at')->nullable();
-
+            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->string('question_text');
+            $table->string('answer_text');
             $table->timestamps();
         });
     }
@@ -28,6 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('users');
+        Schema::dropIfExists('questions');
     }
 };
