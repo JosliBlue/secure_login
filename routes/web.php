@@ -30,7 +30,6 @@ Route::middleware(IsUserAuth::class)->group(function () {
 });
 Route::middleware('auth')->group(function () {
     Route::get('/', [LogListController::class, 'index'])->name('logs');
-    Route::get('/questions', [QuestionController::class, 'index'])->name('questions');
     Route::get('/passwords', [PasswordListController::class, 'index'])->name('passwords');
     Route::get('/logout', [AuthController::class, 'logout'])->name('logout');
 });

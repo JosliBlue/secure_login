@@ -25,9 +25,6 @@
                 <a href="{{ route('passwords') }}"
                     class="@if (Route::currentRouteName() == 'passwords') active @endif
                     text-white hover:text-red-200 font-sans font-medium transition-colors duration-200 border-b-2 border-transparent hover:border-white hover:pb-1">Contraseñas</a>
-                <a href="{{ route('questions') }}"
-                    class="@if (Route::currentRouteName() == 'questions') active @endif
-                        text-white hover:text-red-200 font-sans font-medium transition-colors duration-200 border-b-2 border-transparent hover:border-white hover:pb-1">Preguntas</a>
                 <div class="flex items-center space-x-4">
                     <a href="{{ route('logout') }}"
                         class="px-4 py-2 bg-white text-red-800 font-bold rounded-full transform hover:scale-105 transition-transform duration-200 hover:shadow-lg hover:shadow-red-900/30">Cerrar
