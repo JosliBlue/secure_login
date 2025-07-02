@@ -28,11 +28,15 @@
 
 <body class="bg-gray-100">
 
-    @if (Route::currentRouteName() != 'show-login' && Route::currentRouteName() != 'verify.otp.form')
+    @if (Route::currentRouteName() != 'show-login' &&
+            Route::currentRouteName() != 'verify.otp.form' &&
+            Route::currentRouteName() != 'security.question.form')
         <x-header />
     @endif
 
-    @if (Route::currentRouteName() != 'show-login' && Route::currentRouteName() != 'verify.otp.form')
+    @if (Route::currentRouteName() != 'show-login' &&
+            Route::currentRouteName() != 'verify.otp.form' &&
+            Route::currentRouteName() != 'security.question.form')
         <div class="container mx-auto my-5">
             @yield('content')
         </div>

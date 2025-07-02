@@ -22,7 +22,7 @@ class QuestionSeeder extends Seeder
             return;
         }
 
-        // Preguntas de seguridad predefinidas con sus respuestas
+        // Preguntas de seguridad predefinidas con sus respuestas (con mayúsculas y minúsculas)
         $questionsData = [
             [
                 'question_text' => '¿Cuál es el nombre de tu primera mascota?',
@@ -46,6 +46,5 @@ class QuestionSeeder extends Seeder
                 'answer_text' => Crypt::encryptString($questionData['answer_text']) // Encriptar la respuesta
             ]);
         }
-
     }
 }

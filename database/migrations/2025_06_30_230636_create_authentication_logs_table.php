@@ -15,8 +15,8 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
 
-            // Tipo de autenticación: 'otp' o 'question'
-            $table->enum('auth_type', ['otp', 'question']);
+            // Tipo de autenticación: 'login' o 'otp' o 'question'
+            $table->string('auth_type');
 
             // Campos para OTP
             $table->string('provided_otp_code')->nullable();

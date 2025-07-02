@@ -23,6 +23,10 @@ Route::middleware(IsUserAuth::class)->group(function () {
     Route::get('/verify-otp', [AuthController::class, 'showOtpForm'])->name('verify.otp.form');
     Route::post('/verify-otp', [AuthController::class, 'verifyOtp'])->name('verify.otp');
     Route::post('/resend-otp', [AuthController::class, 'resendOtp'])->name('resend.otp');
+
+    // Rutas para preguntas de seguridad
+    Route::get('/security-question', [AuthController::class, 'showSecurityQuestionForm'])->name('security.question.form');
+    Route::post('/security-question', [AuthController::class, 'verifySecurityQuestion'])->name('verify.security.question');
 });
 Route::middleware('auth')->group(function () {
     Route::get('/', [LogListController::class, 'index'])->name('logs');

@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\Question;
 use App\Services\OtpService;
+use App\Services\SecurityQuestionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Crypt;
@@ -117,13 +119,36 @@ class AuthController extends Controller
                 ->withInput();
         }
 
-        // OTP válido, limpiar y iniciar sesión
+        // OTP válido, limpiar y proceder con pregunta de seguridad
         OtpService::clearOtp($user);
-        Auth::login($user);
 
-        return redirect()
-            ->route('logs')
-            ->with('success', 'Inicio de sesión exitoso con verificación OTP.');
+        // Obtener una pregunta aleatoria del usuario
+        $question = SecurityQuestionService::getRandomQuestionForUser($user);
+
+        if (!$question) {
+            // Si no tiene preguntas, iniciar sesión directamente
+            Auth::login($user);
+            return redirect()
+                ->route('logs')
+                ->with('success', 'Inicio de sesión exitoso.');
+        }
+
+        try {
+            // Enviar pregunta por correo
+            SecurityQuestionService::sendSecurityQuestionEmail($user, $question);
+
+            // Redirigir a la página de pregunta de seguridad
+            return redirect()
+                ->route('security.question.form', [
+                    'email' => $request->email,
+                    'question_id' => $question->id
+                ])
+                ->with('success', 'Hemos enviado una pregunta de seguridad a tu correo.');
+        } catch (\Exception $e) {
+            return redirect()
+                ->back()
+                ->withErrors(['email' => 'Error al enviar la pregunta de seguridad.']);
+        }
     }
 
     public function resendOtp(Request $request)
@@ -226,5 +251,92 @@ class AuthController extends Controller
 
         return redirect()->route('login')
             ->with('success', 'Has cerrado sesión exitosamente.');
+    }
+
+    public function showSecurityQuestionForm(Request $request)
+    {
+        $email = $request->get('email');
+        $questionId = $request->get('question_id');
+
+        if (!$email || !$questionId) {
+            return redirect()->route('show-login');
+        }
+
+        $user = User::compareEmail($email);
+        if (!$user) {
+            return redirect()->route('show-login')
+                ->withErrors(['email' => 'Usuario no encontrado.']);
+        }
+
+        $question = Question::find($questionId);
+        if (!$question || $question->user_id !== $user->id) {
+            return redirect()->route('show-login')
+                ->withErrors(['error' => 'Pregunta no válida.']);
+        }
+
+        $questionText = SecurityQuestionService::getDecryptedQuestion($question);
+        if (!$questionText) {
+            return redirect()->route('show-login')
+                ->withErrors(['error' => 'Error al procesar la pregunta.']);
+        }
+
+        return view('security-question', [
+            'email' => $email,
+            'question' => $questionText,
+            'questionId' => $questionId
+        ]);
+    }
+
+    public function verifySecurityQuestion(Request $request)
+    {
+        $validator = Validator::make(
+            $request->all(),
+            [
+                'email' => 'required|email',
+                'question_id' => 'required|integer',
+                'security_answer' => 'required|string|min:1',
+            ],
+            [
+                'email.required' => 'Email es requerido.',
+                'question_id.required' => 'ID de pregunta es requerido.',
+                'security_answer.required' => 'La respuesta es obligatoria.',
+                'security_answer.min' => 'La respuesta debe tener al menos 1 carácter.',
+            ]
+        );
+
+        if ($validator->fails()) {
+            return redirect()
+                ->back()
+                ->withErrors($validator)
+                ->withInput();
+        }
+
+        $user = User::compareEmail($request->email);
+        if (!$user) {
+            return redirect()
+                ->route('show-login')
+                ->withErrors(['email' => 'Usuario no encontrado.']);
+        }
+
+        $question = Question::find($request->question_id);
+        if (!$question || $question->user_id !== $user->id) {
+            return redirect()
+                ->route('show-login')
+                ->withErrors(['error' => 'Pregunta no válida.']);
+        }
+
+        if (!SecurityQuestionService::validateSecurityAnswer($question, $request->security_answer)) {
+            return redirect()
+                ->back()
+                ->withErrors(['security_answer' => 'Respuesta incorrecta.'])
+                ->withInput();
+        }
+
+        // Respuesta correcta, iniciar sesión
+        Auth::login($user);
+
+        return redirect()
+            ->route('logs')
+            ->with('success', 'Inicio de sesión completado exitosamente.');
     }
 }

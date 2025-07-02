@@ -4,18 +4,20 @@ namespace App\Services;
 
 use App\Models\User;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
 
 class OtpService
 {
     /**
-     * Genera un código OTP seguro con caracteres alfanuméricos
+     * Genera un código OTP seguro con caracteres alfanuméricos (mayúsculas y minúsculas)
      */
     public static function generateSecureOtp($length = 8)
     {
-        // Caracteres seguros para OTP (evitamos caracteres confusos como 0, O, I, l)
-        $characters = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ';
+        // Caracteres seguros para OTP con mayúsculas y minúsculas
+        // (evitamos caracteres confusos como 0, O, I, l, 1)
+        $characters = '23456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz';
         $otp = '';
 
         for ($i = 0; $i < $length; $i++) {
@@ -26,7 +28,7 @@ class OtpService
     }
 
     /**
-     * Genera y guarda un OTP para un usuario
+     * Genera y guarda un OTP para un usuario (cifrado en la BD)
      */
     public static function generateOtpForUser(User $user, $expirationMinutes = 10)
     {
@@ -34,11 +36,11 @@ class OtpService
         $expiresAt = Carbon::now()->addMinutes($expirationMinutes);
 
         $user->update([
-            'otp_code' => $otp,
+            'otp_code' => Crypt::encryptString($otp), // Cifrar el código OTP
             'otp_expires_at' => $expiresAt,
         ]);
 
-        return $otp;
+        return $otp; // Retornar el código sin cifrar para enviarlo por email
     }
 
     /**
@@ -59,7 +61,14 @@ class OtpService
             return false;
         }
 
-        return $user->otp_code === strtoupper($otpCode);
+        try {
+            // Descifrar el código OTP almacenado y comparar
+            $storedOtp = Crypt::decryptString($user->otp_code);
+            return $storedOtp === $otpCode; // Comparación exacta, distinguiendo mayúsculas y minúsculas
+        } catch (\Exception $e) {
+            // Si no se puede descifrar, considerarlo inválido
+            return false;
+        }
     }
 
     /**
@@ -71,6 +80,22 @@ class OtpService
             'otp_code' => null,
             'otp_expires_at' => null,
         ]);
+    }
+
+    /**
+     * Obtiene el OTP descifrado para un usuario (solo para debugging - no usar en producción)
+     */
+    public static function getDecryptedOtp(User $user)
+    {
+        if (!$user->otp_code) {
+            return null;
+        }
+
+        try {
+            return Crypt::decryptString($user->otp_code);
+        } catch (\Exception $e) {
+            return null;
+        }
     }
 
     /**

@@ -1,6 +1,6 @@
 @extends('app')
 
-@section('title', 'Verificación OTP')
+@section('title', 'Pregunta de Seguridad')
 
 @section('content')
     <div class="flex items-center justify-center min-h-screen p-4 relative">
@@ -15,8 +15,8 @@
             <!-- Header with Logo -->
             <div class="text-center mb-6">
                 <img src="{{ asset('secure_login.png') }}" alt="Secure Login" class="mx-auto mb-4 h-32 w-auto">
-                <h1 class="text-2xl font-bold text-gray-800">Verificación de Seguridad</h1>
-                <p class="text-gray-600 mt-2">Código enviado a tu correo electronico</p>
+                <h1 class="text-2xl font-bold text-gray-800">Pregunta de Seguridad</h1>
+                <p class="text-gray-600 mt-2">Último paso de verificación</p>
             </div>
 
             @if ($errors->any())
@@ -57,37 +57,31 @@
                 </div>
             @endif
 
-            <!-- OTP Verification Form -->
-            <form method="POST" action="{{ route('verify.otp') }}" class="space-y-4">
+            <!-- Question Display -->
+            <div class="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-6">
+                <p class="text-orange-600">Ingresa la respuesta a la pregunta que te llegara a tu correo electronico</p>
+            </div>
+
+            <!-- Security Question Form -->
+            <form method="POST" action="{{ route('verify.security.question') }}" class="space-y-4">
                 @csrf
                 <input type="hidden" name="email" value="{{ $email }}">
+                <input type="hidden" name="question_id" value="{{ $questionId }}">
 
                 <div>
-                    <label class="block text-gray-700 font-medium mb-1">Código de Verificación</label>
-                    <input type="text" id="otp_code" name="otp_code" maxlength="8" value="{{ old('otp_code') }}"
-                        placeholder="Abc123Xy"
-                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-800 text-center text-xl font-mono tracking-widest"
-                        required autocomplete="off" style="letter-spacing: 0.3em;">
-                    <p class="mt-1 text-sm text-gray-500">Este código expira en 10 minutos por tu seguridad.</p>
+                    <label class="block text-gray-700 font-medium mb-1">Tu Respuesta</label>
+                    <input type="text" id="security_answer" name="security_answer" value="{{ old('security_answer') }}"
+                        placeholder="Escribe tu respuesta aquí..."
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-800"
+                        required autocomplete="off">
+
                 </div>
 
                 <button type="submit"
                     class="w-full bg-red-900 hover:bg-red-700 text-white font-medium py-3 rounded-lg shadow-md hover:shadow-lg transition">
-                    Verificar Código
+                    Verificar Respuesta
                 </button>
             </form>
-
-            <!-- Resend OTP Section -->
-            <div class="mt-6 text-center space-y-3">
-                <p class="text-sm text-gray-600">¿No recibiste el código?</p>
-                <form method="POST" action="{{ route('resend.otp') }}" class="inline">
-                    @csrf
-                    <input type="hidden" name="email" value="{{ $email }}">
-                    <button type="submit" class="text-red-800 hover:text-red-600 font-medium text-sm underline transition">
-                        Reenviar código
-                    </button>
-                </form>
-            </div>
 
             <!-- Back to Login -->
             <div class="mt-6 text-center">
@@ -95,21 +89,17 @@
                     ← Volver al inicio de sesión
                 </a>
             </div>
+
+
         </div>
     </div>
 @endsection
 
 @push('scripts')
     <script>
-        // Permitir solo caracteres alfanuméricos (mayúsculas y minúsculas)
-        document.getElementById('otp_code').addEventListener('input', function(e) {
-            // Permitir solo letras y números, mantener el caso original
-            e.target.value = e.target.value.replace(/[^A-Za-z0-9]/g, '');
-        });
-
         // Auto-focus en el campo
         document.addEventListener('DOMContentLoaded', function() {
-            document.getElementById('otp_code').focus();
+            document.getElementById('security_answer').focus();
         });
     </script>
 @endpush
