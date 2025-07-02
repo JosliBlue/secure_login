@@ -9,7 +9,7 @@
         <div class="absolute inset-0 bg-black/40"></div>
 
         <div
-            class="w-full max-w-md bg-white/95 backdrop-blur-sm shadow-2xl rounded-2xl p-6 md:p-8 transition-all duration-300 relative z-10">
+            class="w-full max-w-md bg-gray-100 backdrop-blur-sm shadow-2xl rounded-2xl p-6 md:p-8 transition-all duration-300 relative z-10">
             <!-- Header with Logo -->
             <div class="text-center mb-6">
                 <img src="{{ asset('secure_login.png') }}" alt="Secure Login" class="mx-auto mb-4 h-32 w-auto">
