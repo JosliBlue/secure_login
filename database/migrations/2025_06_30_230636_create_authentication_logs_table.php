@@ -20,7 +20,6 @@ return new class extends Migration
 
             // Campos para OTP
             $table->string('provided_otp_code')->nullable();
-            $table->string('real_otp_code')->nullable();
 
             // Campos para pregunta de seguridad
             $table->foreignId('question_id')->nullable()->constrained('questions')->onDelete('set null');
@@ -30,8 +29,7 @@ return new class extends Migration
             $table->boolean('success')->default(false);
 
             // Información adicional
-            $table->string('ip_address', 45)->nullable();
-            $table->string('user_agent')->nullable();
+            $table->text('ip_address')->nullable();
 
             $table->timestamps();
         });

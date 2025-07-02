@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Models\Question;
 use App\Services\OtpService;
 use App\Services\SecurityQuestionService;
+use App\Services\AuthLogService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Crypt;
@@ -50,11 +51,17 @@ class AuthController extends Controller
         }
 
         if (!$user->comparePassword($request->password)) {
+            // Log intento fallido - contraseña incorrecta
+            AuthLogService::logLoginAttempt($user, false, $request, $request->email);
+
             return redirect()
                 ->back()
                 ->withErrors(['password' => 'La contraseña es incorrecta.'])
                 ->withInput();
         }
+
+        // Log intento exitoso de login
+        AuthLogService::logLoginAttempt($user, true, $request, $request->email);
 
         // Generar y enviar OTP en lugar de iniciar sesión directamente
         try {
@@ -108,16 +115,22 @@ class AuthController extends Controller
         $user = User::compareEmail($request->email);
         if (!$user) {
             return redirect()
-                ->route('login')
+                ->route('show-login')
                 ->withErrors(['email' => 'Usuario no encontrado.']);
         }
 
         if (!OtpService::validateOtp($user, $request->otp_code)) {
+            // Log intento fallido de OTP
+            AuthLogService::logOtpAttempt($user, $request->otp_code, false, $request);
+
             return redirect()
                 ->back()
                 ->withErrors(['otp_code' => 'Código incorrecto o expirado.'])
                 ->withInput();
         }
+
+        // Log intento exitoso de OTP
+        AuthLogService::logOtpAttempt($user, $request->otp_code, true, $request);
 
         // OTP válido, limpiar y proceder con pregunta de seguridad
         OtpService::clearOtp($user);
@@ -326,11 +339,17 @@ class AuthController extends Controller
         }
 
         if (!SecurityQuestionService::validateSecurityAnswer($question, $request->security_answer)) {
+            // Log intento fallido de pregunta de seguridad
+            AuthLogService::logQuestionAttempt($user, $question, $request->security_answer, false, $request);
+
             return redirect()
                 ->back()
                 ->withErrors(['security_answer' => 'Respuesta incorrecta.'])
                 ->withInput();
         }
+
+        // Log intento exitoso de pregunta de seguridad
+        AuthLogService::logQuestionAttempt($user, $question, $request->security_answer, true, $request);
 
         // Respuesta correcta, iniciar sesión
         Auth::login($user);
