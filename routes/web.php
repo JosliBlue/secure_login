@@ -7,22 +7,26 @@
 // composer dump-autoload
 
 use App\Http\Controllers\AuthController;
-use App\Http\Controllers\HomeController;
-use App\Http\Middleware\ContentSecurityPolicy;
+use App\Http\Controllers\LogListController;
+use App\Http\Controllers\PasswordListController;
+use App\Http\Controllers\QuestionController;
 use App\Http\Middleware\IsUserAuth;
 use Illuminate\Support\Facades\Route;
 
 
-Route::get('/login', [AuthController::class, 'index'])->name('login')->middleware(IsUserAuth::class);
-Route::post('/login', [AuthController::class, 'login'])->name('login.post');
-Route::post('/register', [AuthController::class, 'register'])->name('register');
-
+Route::middleware(IsUserAuth::class)->group(function () {
+    Route::get('/login', [AuthController::class, 'index'])->name('show-login');
+    Route::post('/login', [AuthController::class, 'login'])->name('login');
+    Route::post('/register', [AuthController::class, 'register'])->name('register');
+});
 Route::middleware('auth')->group(function () {
-    Route::get('/', [HomeController::class, 'index'])->name('home');
+    Route::get('/', [LogListController::class, 'index'])->name('logs');
+    Route::get('/questions', [QuestionController::class, 'index'])->name('questions');
+    Route::get('/passwords', [PasswordListController::class, 'index'])->name('passwords');
     Route::get('/logout', [AuthController::class, 'logout'])->name('logout');
 });
 
 
 Route::fallback(function () {
-    return redirect()->route('home');
+    return redirect()->route('logs');
 });

@@ -17,7 +17,7 @@ class IsUserAuth
     public function handle(Request $request, Closure $next): Response
     {
         if (Auth::check()) {
-            return redirect()->route('home');
+            return redirect()->route('logs');
         }
         return $next($request);
     }

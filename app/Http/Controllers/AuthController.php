@@ -55,7 +55,7 @@ class AuthController extends Controller
 
         Auth::login($user);
         return redirect()
-            ->route('home')
+            ->route('logs')
             ->with('success', 'Inicio de sesión exitoso.');
     }
 
@@ -107,7 +107,7 @@ class AuthController extends Controller
         Auth::login($user);
 
         return redirect()
-            ->route('home')
+            ->route('logs')
             ->with('success', 'Registro exitoso. Bienvenido!');
     }
     public function logout()

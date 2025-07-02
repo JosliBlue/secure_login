@@ -28,10 +28,15 @@
 
 <body>
 
-    @yield('content')
+    @if (Route::currentRouteName() != 'show-login')
+        <x-header />
+    @endif
+
+    <div class="container mx-auto my-5">
+        @yield('content')
+    </div>
 
     @stack('scripts')
-
 </body>
 
 </html>
