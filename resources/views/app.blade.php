@@ -32,9 +32,13 @@
         <x-header />
     @endif
 
-    <div class="container mx-auto my-5">
+    @if (Route::currentRouteName() != 'show-login')
+        <div class="container mx-auto my-5">
+            @yield('content')
+        </div>
+    @else
         @yield('content')
-    </div>
+    @endif
 
     @stack('scripts')
 </body>
