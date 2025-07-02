@@ -18,6 +18,11 @@ Route::middleware(IsUserAuth::class)->group(function () {
     Route::get('/login', [AuthController::class, 'index'])->name('show-login');
     Route::post('/login', [AuthController::class, 'login'])->name('login');
     Route::post('/register', [AuthController::class, 'register'])->name('register');
+
+    // Rutas para OTP
+    Route::get('/verify-otp', [AuthController::class, 'showOtpForm'])->name('verify.otp.form');
+    Route::post('/verify-otp', [AuthController::class, 'verifyOtp'])->name('verify.otp');
+    Route::post('/resend-otp', [AuthController::class, 'resendOtp'])->name('resend.otp');
 });
 Route::middleware('auth')->group(function () {
     Route::get('/', [LogListController::class, 'index'])->name('logs');

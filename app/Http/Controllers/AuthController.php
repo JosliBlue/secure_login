@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Services\OtpService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Crypt;
@@ -53,10 +54,116 @@ class AuthController extends Controller
                 ->withInput();
         }
 
+        // Generar y enviar OTP en lugar de iniciar sesión directamente
+        try {
+            $otpCode = OtpService::generateOtpForUser($user);
+            OtpService::sendOtpEmail($user, $otpCode);
+
+            return redirect()
+                ->route('verify.otp.form', ['email' => $request->email])
+                ->with('success', 'Hemos enviado un código de verificación a tu correo electrónico.');
+        } catch (\Exception $e) {
+            return redirect()
+                ->back()
+                ->withErrors(['email' => 'Error al enviar el código de verificación. Inténtalo de nuevo.'])
+                ->withInput();
+        }
+    }
+
+    public function showOtpForm(Request $request)
+    {
+        $email = $request->get('email');
+
+        if (!$email) {
+            return redirect()->route('login');
+        }
+
+        return view('verify-otp', compact('email'));
+    }
+
+    public function verifyOtp(Request $request)
+    {
+        $validator = Validator::make(
+            $request->all(),
+            [
+                'email' => 'required|email',
+                'otp_code' => 'required|string|size:8',
+            ],
+            [
+                'email.required' => 'Email es requerido.',
+                'otp_code.required' => 'El código OTP es obligatorio.',
+                'otp_code.size' => 'El código OTP debe tener exactamente 8 caracteres.',
+            ]
+        );
+
+        if ($validator->fails()) {
+            return redirect()
+                ->back()
+                ->withErrors($validator)
+                ->withInput();
+        }
+
+        $user = User::compareEmail($request->email);
+        if (!$user) {
+            return redirect()
+                ->route('login')
+                ->withErrors(['email' => 'Usuario no encontrado.']);
+        }
+
+        if (!OtpService::validateOtp($user, $request->otp_code)) {
+            return redirect()
+                ->back()
+                ->withErrors(['otp_code' => 'Código incorrecto o expirado.'])
+                ->withInput();
+        }
+
+        // OTP válido, limpiar y iniciar sesión
+        OtpService::clearOtp($user);
         Auth::login($user);
+
         return redirect()
             ->route('logs')
-            ->with('success', 'Inicio de sesión exitoso.');
+            ->with('success', 'Inicio de sesión exitoso con verificación OTP.');
+    }
+
+    public function resendOtp(Request $request)
+    {
+        $validator = Validator::make(
+            $request->all(),
+            [
+                'email' => 'required|email',
+            ],
+            [
+                'email.required' => 'Email es requerido.',
+                'email.email' => 'Formato de email inválido.',
+            ]
+        );
+
+        if ($validator->fails()) {
+            return redirect()
+                ->back()
+                ->withErrors($validator);
+        }
+
+        $user = User::compareEmail($request->email);
+        if (!$user) {
+            return redirect()
+                ->route('login')
+                ->withErrors(['email' => 'Usuario no encontrado.']);
+        }
+
+        try {
+            $otpCode = OtpService::generateOtpForUser($user);
+            OtpService::sendOtpEmail($user, $otpCode);
+
+            return redirect()
+                ->back()
+                ->with('success', 'Nuevo código enviado a tu correo electrónico.');
+        } catch (\Exception $e) {
+            return redirect()
+                ->back()
+                ->withErrors(['email' => 'Error al reenviar el código. Inténtalo de nuevo.']);
+        }
     }
 
     public function register(Request $request)
