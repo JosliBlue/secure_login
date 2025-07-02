@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Crypt;
 
 class User extends Authenticatable
 {
@@ -35,5 +36,33 @@ class User extends Authenticatable
     public function passwords()
     {
         return $this->hasMany(Password::class);
+    }
+
+    // ======================= METODITOS DE AYUDA =======================
+    // Muestra el email desencriptado
+    public function getEmail()
+    {
+        return Crypt::decryptString($this->email);
+    }
+
+    // Necesita un email desencriptado para comparar
+    public static function compareEmail($email)
+    {
+        $users = self::all();
+
+        foreach ($users as $user) {
+            if ($user->getEmail() === $email) {
+                return $user;
+            }
+        }
+
+        return null;
+    }
+
+    // Necesita un password desencriptado para comparar
+    public function comparePassword($password)
+    {
+        $decryptedPassword = Crypt::decryptString($this->password);
+        return $decryptedPassword === $password;
     }
 }
