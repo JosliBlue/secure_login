@@ -8,6 +8,7 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\LogListController;
+use App\Http\Controllers\PasswordController;
 use App\Http\Controllers\PasswordListController;
 use App\Http\Controllers\QuestionController;
 use App\Http\Middleware\IsUserAuth;
@@ -30,7 +31,8 @@ Route::middleware(IsUserAuth::class)->group(function () {
 });
 Route::middleware('auth')->group(function () {
     Route::get('/', [LogListController::class, 'index'])->name('logs');
-    Route::get('/passwords', [PasswordListController::class, 'index'])->name('passwords');
+    Route::get('/passwords', [PasswordController::class, 'showChangeForm'])->name('passwords');
+    Route::post('/password/update', [PasswordController::class, 'changePassword'])->name('password.update');
     Route::get('/logout', [AuthController::class, 'logout'])->name('logout');
 });
 

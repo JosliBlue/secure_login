@@ -65,4 +65,34 @@ class User extends Authenticatable
         $decryptedPassword = Crypt::decryptString($this->password);
         return $decryptedPassword === $password;
     }
+
+    // Verificar si una contraseña ya fue usada
+    public function hasUsedPassword($password)
+    {
+        // Verificar contraseña actual
+        if ($this->comparePassword($password)) {
+            return true;
+        }
+
+        // Verificar contraseñas del historial
+        $passwords = $this->passwords()->get();
+
+        for ($i = 0; $i < count($passwords); $i++) {
+            $decryptedOldPassword = Crypt::decryptString($passwords[$i]->password);
+            if ($decryptedOldPassword === $password) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    // Agregar contraseña actual al historial
+    public function addPasswordToHistory()
+    {
+        Password::create([
+            'user_id' => $this->id,
+            'password' => $this->password,
+        ]);
+    }
 }
